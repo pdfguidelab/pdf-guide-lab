@@ -5,6 +5,8 @@ const SUPABASE_URL = 'https://jszsrbtnnefgrjaghlrw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_xF4k-QxfEUBqGn7pv88_3A_rVMPFk0K'
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
+const CONTACT_EMAIL = 'pdfguidee@gmail.com'
+
 const NICHES = [
   'Pets','Parenting','Health & Wellness','Fitness','Personal Finance',
   'Productivity','Relationships & Dating','Self-Improvement',
@@ -19,22 +21,93 @@ const NAV = [
   { id: 'saved', label: 'Saved PDF Ideas', icon: '♥' },
 ]
 
+function extractTopic(idea) {
+  const d = idea.description || ''
+  const patterns = [
+    / on ([^,.—]+?)(?: without overwhelm| and gives| for [a-z]| in one weekend|, )/,
+    / with ([^,.]+?), then/,
+    / of ([^,.]+?) and failed/,
+    / around ([^—.]+?) —/,
+    / make ([^.]+?) automatic/,
+    /Compresses ([^.]+?) into/,
+    / starting ([^,.]+?),/,
+  ]
+  for (const p of patterns) {
+    const m = d.match(p)
+    if (m && m[1] && m[1].length > 3 && m[1].length < 60) return m[1].trim()
+  }
+  return idea.niche.toLowerCase()
+}
+
+function exampleQueries(idea) {
+  const t = extractTopic(idea)
+  return [
+    `how to start ${t}`,
+    `${t} for beginners`,
+    `best ${t} tips`,
+    `${t} mistakes to avoid`,
+  ]
+}
+
+function interestBadge(score) {
+  if (score >= 88) return 'High Interest'
+  if (score >= 80) return 'Rising'
+  return 'Steady'
+}
+
+function difficultyBadge(d) {
+  if (d === 'Beginner') return 'Easy'
+  if (d === 'Intermediate') return 'Medium'
+  return 'Advanced'
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—'
+  const d = new Date(Number(ts))
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+function Footer() {
+  return (
+    <footer className="site-footer">
+      For all inquiries, contact us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+    </footer>
+  )
+}
+
 function IdeaCard({ idea, saved, onToggleSave, removeMode }) {
+  const [showQueries, setShowQueries] = useState(false)
+  const queries = useMemo(() => exampleQueries(idea), [idea])
   return (
     <article className="idea-card">
       <div className="idea-top">
-        <span className="idea-niche">{idea.niche}</span>
-        <span className="score">{idea.opportunity_score}</span>
+        <h3 className="idea-title">{idea.title}</h3>
+        <button
+          className={`save-btn ${removeMode ? 'remove' : saved ? 'saved' : ''}`}
+          onClick={() => onToggleSave(idea)}
+        >
+          {removeMode ? 'Remove' : saved ? 'Saved ✓' : '🔖 Save'}
+        </button>
       </div>
-      <h3 className="idea-title">{idea.title}</h3>
       <p className="idea-desc">{idea.description}</p>
+      <p className="idea-audience">👥 {idea.target_audience}</p>
       <div className="idea-meta">
-        <span className="tag">{idea.target_audience}</span>
-        <span className="tag">{idea.difficulty}</span>
+        <span className="tag tag-easy">{difficultyBadge(idea.difficulty)}</span>
+        <span className="tag tag-interest">{interestBadge(idea.opportunity_score)}</span>
+        <span className="tag tag-niche">{idea.niche}</span>
       </div>
-      <button className={`save-btn ${removeMode ? 'remove' : saved ? 'saved' : ''}`} onClick={() => onToggleSave(idea)}>
-        {removeMode ? 'Remove' : saved ? 'Saved ✓' : 'Save idea'}
+      <div className="score-row">
+        <span>🏆 Opportunity Score</span>
+        <span className="score-num">{idea.opportunity_score}<small>/100</small></span>
+      </div>
+      <button className="queries-toggle" onClick={() => setShowQueries(v => !v)}>
+        🔍 {showQueries ? 'Hide' : 'Show'} Example Queries (4)
       </button>
+      {showQueries && (
+        <div className="queries-list">
+          {queries.map(q => <div key={q} className="query-pill">"{q}"</div>)}
+        </div>
+      )}
     </article>
   )
 }
@@ -59,6 +132,10 @@ function Auth() {
         if (signErr) throw signErr
         setOk('Account created. Check your inbox to confirm, then log in.')
         setMode('login')
+      } else if (mode === 'forgot') {
+        const { error: rErr } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
+        if (rErr) throw rErr
+        setOk('Password reset link sent. Check your inbox.')
       } else {
         const { error: logErr } = await supabase.auth.signInWithPassword({ email, password })
         if (logErr) throw logErr
@@ -71,35 +148,107 @@ function Auth() {
     <div className="auth-wrap">
       <form className="auth-card" onSubmit={submit}>
         <div className="brand"><span className="brand-dot" />PDF Guide Lab</div>
-        <p className="auth-sub">{mode === 'login' ? 'Log in to browse trending PDF guide ideas.' : 'Create your account with the access code from your purchase email.'}</p>
+        <p className="auth-sub">
+          {mode === 'login' && 'Log in to browse trending PDF guide ideas.'}
+          {mode === 'signup' && 'Create your account with the access code from your purchase email.'}
+          {mode === 'forgot' && 'Enter your email and we will send you a reset link.'}
+        </p>
         {error && <p className="auth-error">{error}</p>}
         {ok && <p className="auth-ok">{ok}</p>}
         <div className="field"><label>Email</label><input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-        <div className="field"><label>Password</label><input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} /></div>
-        {mode === 'signup' && <div className="field"><label>Access code</label><input required value={code} onChange={e => setCode(e.target.value)} placeholder="From your purchase email" /></div>}
-        <button className="btn-primary" disabled={busy}>{busy ? 'One moment…' : mode === 'login' ? 'Log in' : 'Create account'}</button>
-        <p className="auth-switch">{mode === 'login' ? (<>No account yet? <button type="button" onClick={() => { setMode('signup'); setError(''); setOk('') }}>Create one</button></>) : (<>Already have an account? <button type="button" onClick={() => { setMode('login'); setError(''); setOk('') }}>Log in</button></>)}</p>
+        {mode !== 'forgot' && (
+          <div className="field"><label>Password</label><input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} /></div>
+        )}
+        {mode === 'signup' && (
+          <div className="field"><label>Access code</label><input required value={code} onChange={e => setCode(e.target.value)} placeholder="From your purchase email" /></div>
+        )}
+        <button className="btn-primary" disabled={busy}>
+          {busy ? 'One moment…' : mode === 'login' ? 'Log in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+        </button>
+        <p className="auth-switch">
+          {mode === 'login' && (<>
+            <button type="button" onClick={() => { setMode('forgot'); setError(''); setOk('') }}>Forgot password?</button>
+            <br />No account yet? <button type="button" onClick={() => { setMode('signup'); setError(''); setOk('') }}>Create one</button>
+          </>)}
+          {mode === 'signup' && (<>Already have an account? <button type="button" onClick={() => { setMode('login'); setError(''); setOk('') }}>Log in</button></>)}
+          {mode === 'forgot' && (<>Remembered it? <button type="button" onClick={() => { setMode('login'); setError(''); setOk('') }}>Back to log in</button></>)}
+        </p>
       </form>
     </div>
   )
 }
 
-function Dashboard({ totalIdeas, savedCount, onGoGenerate }) {
+function ResetPassword({ onDone }) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e) {
+    e.preventDefault(); setError(''); setBusy(true)
+    const { error: uErr } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (uErr) setError(uErr.message)
+    else onDone()
+  }
+
+  return (
+    <div className="auth-wrap">
+      <form className="auth-card" onSubmit={submit}>
+        <div className="brand"><span className="brand-dot" />PDF Guide Lab</div>
+        <p className="auth-sub">Choose a new password for your account.</p>
+        {error && <p className="auth-error">{error}</p>}
+        <div className="field"><label>New password</label><input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} /></div>
+        <button className="btn-primary" disabled={busy}>{busy ? 'One moment…' : 'Save new password'}</button>
+      </form>
+    </div>
+  )
+}
+
+function Dashboard({ userEmail, savedCount, lastGen, onGoGenerate, onGoSaved }) {
+  const name = (userEmail || '').split('@')[0]
   return (
     <>
-      <h1 className="page-title">Dashboard</h1>
-      <p className="page-sub">Welcome back. Here's your lab at a glance.</p>
-      <div className="stats">
-        <div className="stat-card"><div className="stat-num">{totalIdeas ?? '—'}</div><div className="stat-label">Ideas in the catalog</div></div>
-        <div className="stat-card"><div className="stat-num">{NICHES.length}</div><div className="stat-label">Niches covered</div></div>
-        <div className="stat-card"><div className="stat-num">{savedCount}</div><div className="stat-label">Ideas you've saved</div></div>
+      <div className="welcome-banner">
+        <div className="eyebrow">✨ WELCOME BACK</div>
+        <h1>Hey, {name}! 👋</h1>
+        <p>Discover trending PDF guide ideas across 14 profitable niches.</p>
       </div>
-      <button className="generate-btn" onClick={onGoGenerate}>Generate PDF ideas →</button>
+
+      <div className="section-label">QUICK ACTIONS</div>
+      <div className="quick-grid">
+        <button className="quick-card" onClick={onGoGenerate}>
+          <div className="quick-icon">💡</div>
+          <h3>Generate Ideas</h3>
+          <p>Find trending PDF guide ideas for your niche</p>
+          <span className="quick-cta">Get started →</span>
+        </button>
+        <button className="quick-card" onClick={onGoSaved}>
+          <div className="quick-icon">🔖</div>
+          <h3>Saved Ideas</h3>
+          <p>Review and manage your saved PDF guide ideas</p>
+          <span className="quick-cta">Get started →</span>
+        </button>
+      </div>
+
+      <div className="section-label">YOUR STATS</div>
+      <div className="stats">
+        <div className="stat-card">
+          <div className="stat-icon">◎</div>
+          <div className="stat-label">Total Saved Ideas</div>
+          <div className="stat-num">{savedCount}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🕐</div>
+          <div className="stat-label">Last Generation</div>
+          <div className="stat-num stat-date">{fmtDate(lastGen)}</div>
+        </div>
+      </div>
     </>
   )
 }
 
-function Generate({ savedIds, onToggleSave }) {
+function Generate({ savedIds, onToggleSave, onGenerated }) {
+  const [topic, setTopic] = useState('')
   const [niche, setNiche] = useState('')
   const [count, setCount] = useState(10)
   const [ideas, setIdeas] = useState([])
@@ -107,34 +256,82 @@ function Generate({ savedIds, onToggleSave }) {
   const [error, setError] = useState('')
 
   async function generate() {
-    setBusy(true); setError('')
-    const { data, error: err } = await supabase.rpc('get_random_ideas', { p_niche: niche || null, p_count: count })
-    if (err) setError('Could not load ideas. Refresh and try again.')
-    else setIdeas(data || [])
+    setBusy(true); setError(''); setIdeas([])
+    const delay = new Promise(r => setTimeout(r, 9000 + Math.random() * 5000))
+    let result
+    if (topic.trim()) {
+      let q = supabase.from('ideas').select('*').or(`title.ilike.%${topic.trim()}%,description.ilike.%${topic.trim()}%`).limit(60)
+      if (niche) q = q.eq('niche', niche)
+      result = await q
+      if (result.data) {
+        const shuffled = [...result.data].sort(() => Math.random() - 0.5)
+        result = { ...result, data: shuffled.slice(0, count) }
+      }
+    } else {
+      result = await supabase.rpc('get_random_ideas', { p_niche: niche || null, p_count: count })
+    }
+    await delay
+    if (result.error) setError('Could not load ideas. Refresh and try again.')
+    else {
+      setIdeas(result.data || [])
+      if ((result.data || []).length === 0) setError('No ideas matched that topic. Try a broader keyword or leave it empty.')
+      const ts = Date.now()
+      localStorage.setItem('pgl_last_gen', String(ts))
+      onGenerated(ts)
+    }
     setBusy(false)
   }
 
   return (
     <>
-      <h1 className="page-title">Generate PDF ideas</h1>
-      <p className="page-sub">Pick a niche, choose how many ideas you want, and hit generate.</p>
-      <div className="controls">
+      <h1 className="page-title">Generate PDF Ideas</h1>
+      <p className="page-sub">Find trending PDF guide ideas for your niche.</p>
+
+      <div className="gen-panel">
         <div className="field">
-          <label>Niche</label>
-          <select value={niche} onChange={e => setNiche(e.target.value)}>
-            <option value="">All niches</option>
-            {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
+          <label>Topic or Problem <span className="optional">(Optional)</span></label>
+          <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g., healthy meal planning for busy parents…" />
         </div>
-        <div className="field">
-          <label>How many ideas</label>
-          <div className="count-row">{COUNTS.map(c => <button key={c} type="button" className={`count-chip ${count === c ? 'active' : ''}`} onClick={() => setCount(c)}>{c}</button>)}</div>
+        <div className="gen-row">
+          <div className="field">
+            <label>Niche <span className="required">*</span></label>
+            <select value={niche} onChange={e => setNiche(e.target.value)}>
+              <option value="">All niches</option>
+              {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Number of Ideas: <strong>{count}</strong></label>
+            <div className="count-row">{COUNTS.map(c => <button key={c} type="button" className={`count-chip ${count === c ? 'active' : ''}`} onClick={() => setCount(c)}>{c}</button>)}</div>
+          </div>
         </div>
-        <button className="generate-btn" onClick={generate} disabled={busy}>{busy ? 'Generating…' : 'Generate ideas'}</button>
+        <button className="generate-btn" onClick={generate} disabled={busy}>
+          {busy ? '⟳ Generating Ideas…' : '✨ Generate Ideas'}
+        </button>
       </div>
-      {error && <p className="auth-error">{error}</p>}
-      {ideas.length === 0 && !busy ? <div className="empty">Your ideas will appear here. Pick a niche and generate.</div> :
-        <div className="ideas-grid">{ideas.map(idea => <IdeaCard key={idea.id} idea={idea} saved={savedIds.has(idea.id)} onToggleSave={onToggleSave} />)}</div>}
+
+      {busy && (
+        <div className="loading-card">
+          <div className="spinner" />
+          <h3>Analyzing the catalog…</h3>
+          <p>This may take 10–30 seconds as we find the strongest ideas for you</p>
+        </div>
+      )}
+
+      {error && !busy && <p className="auth-error">{error}</p>}
+
+      {!busy && ideas.length > 0 && (
+        <>
+          <div className="section-label">GENERATED IDEAS ({ideas.length})</div>
+          <div className="ideas-grid">
+            {ideas.map(idea => <IdeaCard key={idea.id} idea={idea} saved={savedIds.has(idea.id)} onToggleSave={onToggleSave} />)}
+          </div>
+        </>
+      )}
+
+      {!busy && ideas.length === 0 && !error && (
+        <div className="empty">Your ideas will appear here. Pick a niche and generate.</div>
+      )}
     </>
   )
 }
@@ -142,9 +339,9 @@ function Generate({ savedIds, onToggleSave }) {
 function Saved({ savedIdeas, onToggleSave }) {
   return (
     <>
-      <h1 className="page-title">Saved PDF ideas</h1>
+      <h1 className="page-title">Saved PDF Ideas</h1>
       <p className="page-sub">Every idea you save is stored on your account, on any device.</p>
-      {savedIdeas.length === 0 ? <div className="empty">Nothing saved yet. Generate some ideas and hit "Save idea".</div> :
+      {savedIdeas.length === 0 ? <div className="empty">Nothing saved yet. Generate some ideas and hit "Save".</div> :
         <div className="ideas-grid">{savedIdeas.map(idea => <IdeaCard key={idea.id} idea={idea} removeMode onToggleSave={onToggleSave} />)}</div>}
     </>
   )
@@ -155,18 +352,21 @@ export default function App() {
   const [ready, setReady] = useState(false)
   const [page, setPage] = useState('dashboard')
   const [savedIdeas, setSavedIdeas] = useState([])
-  const [totalIdeas, setTotalIdeas] = useState(null)
+  const [recovery, setRecovery] = useState(false)
+  const [lastGen, setLastGen] = useState(localStorage.getItem('pgl_last_gen'))
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true) })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s)
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true)
+    })
     return () => sub.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
     if (!session) return
     supabase.from('saved_ideas').select('idea_id, ideas(*)').then(({ data }) => setSavedIdeas((data || []).map(r => r.ideas).filter(Boolean)))
-    supabase.from('ideas').select('*', { count: 'exact', head: true }).then(({ count }) => setTotalIdeas(count))
   }, [session])
 
   const savedIds = useMemo(() => new Set(savedIdeas.map(i => i.id)), [savedIdeas])
@@ -183,6 +383,7 @@ export default function App() {
   }
 
   if (!ready) return null
+  if (recovery) return <ResetPassword onDone={() => setRecovery(false)} />
   if (!session) return <Auth />
 
   return (
@@ -193,9 +394,10 @@ export default function App() {
         <div className="sidebar-footer">{session.user.email}<br /><button onClick={() => supabase.auth.signOut()}>Log out</button></div>
       </aside>
       <main className="main">
-        {page === 'dashboard' && <Dashboard totalIdeas={totalIdeas} savedCount={savedIdeas.length} onGoGenerate={() => setPage('generate')} />}
-        {page === 'generate' && <Generate savedIds={savedIds} onToggleSave={toggleSave} />}
+        {page === 'dashboard' && <Dashboard userEmail={session.user.email} savedCount={savedIdeas.length} lastGen={lastGen} onGoGenerate={() => setPage('generate')} onGoSaved={() => setPage('saved')} />}
+        {page === 'generate' && <Generate savedIds={savedIds} onToggleSave={toggleSave} onGenerated={setLastGen} />}
         {page === 'saved' && <Saved savedIdeas={savedIdeas} onToggleSave={toggleSave} />}
+        <Footer />
       </main>
     </div>
   )
