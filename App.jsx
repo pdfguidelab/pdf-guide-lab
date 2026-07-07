@@ -21,7 +21,6 @@ const NAV = [
   { id: 'saved', label: 'Saved PDF Ideas', icon: '♥' },
 ]
 
-// Stable hash so each idea always gets the same badges/queries/searches
 function hashId(id) {
   const s = String(id)
   let h = 0
@@ -29,7 +28,6 @@ function hashId(id) {
   return h
 }
 
-// Color palette for badges
 const PALETTE = {
   green:  { color: '#34d399', border: '1px solid rgba(52,211,153,0.35)',  background: 'rgba(52,211,153,0.10)' },
   amber:  { color: '#fbbf24', border: '1px solid rgba(251,191,36,0.35)',  background: 'rgba(251,191,36,0.10)' },
@@ -68,40 +66,12 @@ function trendBadge(idea) {
     : { label: '— Stable', tone: 'gray' }
 }
 
-// Stable estimated monthly searches, weighted by opportunity score
 function searchesPerMo(idea) {
   const h = hashId(idea.id)
   const s = idea.opportunity_score || 75
   const base = 1500 + Math.max(0, s - 60) * 150
   const val = base + (h % 120) * 100
   return (Math.round(val / 100) * 100).toLocaleString('en-US')
-}
-
-// Real searches people type on YouTube, per niche
-const QUERY_BANKS = {
-  'Pets': ['how to stop puppy biting','dog separation anxiety solutions','how to crate train a puppy','raw food diet for dogs','how to leash train a dog','puppy schedule for new owners','how to socialize a reactive dog','cat behavior explained'],
-  'Parenting': ['what to say instead of no','gentle parenting scripts for tantrums','how to discipline a strong willed child','positive discipline phrases','toddler bedtime routine tips','how to stop yelling at my kids','screen time rules for kids','montessori activities at home'],
-  'Health & Wellness': ['how to fix my sleep schedule','morning routine for more energy','how to reduce bloating naturally','gut health for beginners','how to lower cortisol','how to stop feeling tired all the time','daily habits for better health','simple wellness routine'],
-  'Fitness': ['home workout no equipment','how to lose belly fat','beginner gym routine','how to build muscle at home','walking for weight loss','stretching routine for beginners','how to stay consistent with workouts','best exercises for posture'],
-  'Personal Finance': ['how to budget for beginners','how to save money fast','paying off debt tips','how to start investing','50 30 20 budget explained','how to stop living paycheck to paycheck','emergency fund explained','side hustle ideas'],
-  'Productivity': ['how to stop procrastinating','time blocking tutorial','morning routine for productivity','how to focus better','notion setup for beginners','how to plan your week','deep work explained','habits of productive people'],
-  'Relationships & Dating': ['how to communicate better in a relationship','signs of a healthy relationship','how to set boundaries','attachment styles explained','how to stop overthinking in relationships','how to fix a relationship','questions to ask your partner','first date tips'],
-  'Self-Improvement': ['how to build confidence','how to change your life','self discipline tips','how to stop negative self talk','journaling for beginners','how to build better habits','how to glow up mentally','morning affirmations'],
-  'Beauty & Skincare': ['skincare routine for beginners','how to get clear skin','makeup for acne prone skin','how to layer skincare','retinol for beginners','how to get glass skin','drugstore skincare that works','anti aging skincare routine'],
-  'Home & Organization': ['how to declutter your home','small apartment organization ideas','cleaning routine that works','pantry organization ideas','how to organize your closet','minimalist home tips','deep cleaning checklist','how to keep your house clean'],
-  'Food & Nutrition': ['healthy meal prep for the week','high protein meals','easy dinner ideas','how to eat healthy on a budget','anti inflammatory foods','meal planning for beginners','healthy snacks that fill you up','how to cut sugar'],
-  'Career & Business': ['how to ace a job interview','linkedin profile tips','how to ask for a raise','resume tips that work','how to start freelancing','salary negotiation tips','how to switch careers','productivity at work'],
-  'Travel': ['how to travel on a budget','packing tips for long trips','how to plan a trip','travel hacks everyone should know','carry on packing list','how to find cheap flights','solo travel for beginners','best travel apps'],
-  'Hobbies & Crafts': ['crochet for beginners','easy drawing tutorials','beginner woodworking projects','how to start journaling','watercolor for beginners','diy home decor ideas','knitting basics','easy craft ideas'],
-}
-const QUERY_BANK_DEFAULT = ['how to get started','beginner tips that actually work','common mistakes to avoid','best routine for beginners']
-
-function exampleQueries(idea) {
-  const bank = QUERY_BANKS[idea.niche] || QUERY_BANK_DEFAULT
-  const start = hashId(idea.id) % bank.length
-  const out = []
-  for (let i = 0; i < 4; i++) out.push(bank[(start + i) % bank.length])
-  return out
 }
 
 function fmtDate(ts) {
@@ -119,8 +89,6 @@ function Footer() {
 }
 
 function IdeaCard({ idea, saved, onToggleSave, removeMode }) {
-  const [showQueries, setShowQueries] = useState(false)
-  const queries = useMemo(() => exampleQueries(idea), [idea])
   const badges = useMemo(
     () => [diffBadge(idea), interestBadge(idea), competitionBadge(idea), trendBadge(idea)],
     [idea]
@@ -148,14 +116,6 @@ function IdeaCard({ idea, saved, onToggleSave, removeMode }) {
         <span>🏆 Opportunity Score</span>
         <span className="score-num">{idea.opportunity_score}<small>/100</small></span>
       </div>
-      <button className="queries-toggle" onClick={() => setShowQueries(v => !v)}>
-        🔍 {showQueries ? 'Hide' : 'Show'} Example Queries ({queries.length})
-      </button>
-      {showQueries && (
-        <div className="queries-list">
-          {queries.map(q => <div key={q} className="query-pill">"{q}"</div>)}
-        </div>
-      )}
     </article>
   )
 }
@@ -378,7 +338,11 @@ function Generate({ savedIds, onToggleSave, onGenerated }) {
       )}
 
       {!busy && ideas.length === 0 && !error && (
-        <div className="empty">Your ideas will appear here. Pick a niche and generate.</div>
+        <div className="empty-state">
+          <div className="empty-icon">✦</div>
+          <h3>Ready to find trending ideas?</h3>
+          <p>Select a niche above and we'll generate PDF guide ideas based on real search trends.</p>
+        </div>
       )}
     </>
   )
@@ -389,8 +353,15 @@ function Saved({ savedIdeas, onToggleSave }) {
     <>
       <h1 className="page-title">Saved PDF Ideas</h1>
       <p className="page-sub">Every idea you save is stored on your account, on any device.</p>
-      {savedIdeas.length === 0 ? <div className="empty">Nothing saved yet. Generate some ideas and hit "Save".</div> :
-        <div className="ideas-grid">{savedIdeas.map(idea => <IdeaCard key={idea.id} idea={idea} removeMode onToggleSave={onToggleSave} />)}</div>}
+      {savedIdeas.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">🔖</div>
+          <h3>No saved ideas yet</h3>
+          <p>Generate some ideas and hit "Save" to keep them here.</p>
+        </div>
+      ) : (
+        <div className="ideas-grid">{savedIdeas.map(idea => <IdeaCard key={idea.id} idea={idea} removeMode onToggleSave={onToggleSave} />)}</div>
+      )}
     </>
   )
 }
