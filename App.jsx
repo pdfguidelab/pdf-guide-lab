@@ -405,6 +405,8 @@ export default function App() {
   if (recovery) return <ResetPassword onDone={() => setRecovery(false)} />
   if (!session) return <Auth />
 
+  const pageLabel = (NAV.find(n => n.id === page) || {}).label || 'Dashboard'
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -412,14 +414,17 @@ export default function App() {
         {NAV.map(item => <button key={item.id} className={`nav-btn ${page === item.id ? 'active' : ''}`} onClick={() => setPage(item.id)}><span>{item.icon}</span>{item.label}</button>)}
         <div className="sidebar-footer">{session.user.email}<br /><button onClick={() => supabase.auth.signOut()}>Log out</button></div>
       </aside>
-      <main className="main">
-        <div className="main-inner">
-          {page === 'dashboard' && <Dashboard userEmail={session.user.email} savedCount={savedIdeas.length} lastGen={lastGen} onGoGenerate={() => setPage('generate')} onGoSaved={() => setPage('saved')} />}
-          {page === 'generate' && <Generate savedIds={savedIds} onToggleSave={toggleSave} onGenerated={setLastGen} />}
-          {page === 'saved' && <Saved savedIdeas={savedIdeas} onToggleSave={toggleSave} />}
-          <Footer />
-        </div>
-      </main>
+      <div className="content-col">
+        <header className="topbar">{pageLabel}</header>
+        <main className="main">
+          <div className="main-inner">
+            {page === 'dashboard' && <Dashboard userEmail={session.user.email} savedCount={savedIdeas.length} lastGen={lastGen} onGoGenerate={() => setPage('generate')} onGoSaved={() => setPage('saved')} />}
+            {page === 'generate' && <Generate savedIds={savedIds} onToggleSave={toggleSave} onGenerated={setLastGen} />}
+            {page === 'saved' && <Saved savedIdeas={savedIdeas} onToggleSave={toggleSave} />}
+            <Footer />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
