@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://jszsrbtnnefgrjaghlrw.supabase.co'
@@ -78,6 +78,50 @@ function fmtDate(ts) {
   if (!ts) return '—'
   const d = new Date(Number(ts))
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+function NicheSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  const options = ['All niches', ...NICHES]
+  const label = value || 'All niches'
+
+  return (
+    <div className="nselect" ref={ref}>
+      <button type="button" className={`nselect-btn ${open ? 'open' : ''}`} onClick={() => setOpen(v => !v)}>
+        <span>{label}</span>
+        <span className={`nselect-chev ${open ? 'up' : ''}`}>▾</span>
+      </button>
+      {open && (
+        <div className="nselect-menu">
+          {options.map(opt => {
+            const val = opt === 'All niches' ? '' : opt
+            const active = val === value
+            return (
+              <button
+                type="button"
+                key={opt}
+                className={`nselect-item ${active ? 'active' : ''}`}
+                onClick={() => { onChange(val); setOpen(false) }}
+              >
+                {opt}
+                {active && <span className="nselect-check">✓</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function Footer() {
@@ -303,10 +347,7 @@ function Generate({ savedIds, onToggleSave, onGenerated }) {
         <div className="gen-row">
           <div className="field">
             <label>Niche <span className="required">*</span></label>
-            <select value={niche} onChange={e => setNiche(e.target.value)}>
-              <option value="">All niches</option>
-              {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
+            <NicheSelect value={niche} onChange={setNiche} />
           </div>
           <div className="field">
             <label>Number of Ideas: <strong>{count}</strong></label>
