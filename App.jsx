@@ -5,7 +5,7 @@ const SUPABASE_URL = 'https://jszsrbtnnefgrjaghlrw.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_xF4k-QxfEUBqGn7pv88_3A_rVMPFk0K'
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const CONTACT_EMAIL = 'pdfguidee@gmail.com'
+const CONTACT_EMAIL = 'pdfguidelabb@gmail.com'
 
 const NICHES = [
   'Pets','Parenting','Health & Wellness','Fitness','Personal Finance',
