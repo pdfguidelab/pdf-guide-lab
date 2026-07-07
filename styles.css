@@ -87,6 +87,37 @@ button { font: inherit; cursor: pointer; }
 .page-title { font-size: 27px; margin-bottom: 6px; font-weight: 800; }
 .page-sub { color: var(--muted); font-size: 14.5px; margin-bottom: 28px; }
 
+/* ---------- Custom niche dropdown ---------- */
+.nselect { position: relative; }
+.nselect-btn {
+  width: 100%; padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--line); border-radius: 12px; text-align: left;
+  transition: border-color .15s;
+}
+.nselect-btn:hover, .nselect-btn.open { border-color: var(--teal); }
+.nselect-chev { color: var(--muted); font-size: 12px; transition: transform .15s; }
+.nselect-chev.up { transform: rotate(180deg); }
+.nselect-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40;
+  max-height: 320px; overflow-y: auto;
+  background: #141417; border: 1px solid var(--line);
+  border-radius: 14px; padding: 6px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+}
+.nselect-item {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; border-radius: 9px;
+  background: none; border: none; color: var(--text);
+  font-size: 14px; text-align: left;
+}
+.nselect-item:hover { background: rgba(34,211,238,.09); color: var(--cyan); }
+.nselect-item.active { background: linear-gradient(135deg, rgba(20,184,166,.16), rgba(34,211,238,.1)); color: var(--cyan); }
+.nselect-check { font-size: 12px; }
+.nselect-menu::-webkit-scrollbar { width: 8px; }
+.nselect-menu::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+
 /* ---------- Dashboard ---------- */
 .welcome-banner {
   background: linear-gradient(120deg, rgba(20,184,166,.16), rgba(34,211,238,.07) 60%, transparent);
