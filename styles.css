@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+
 :root {
   --bg: #0a0a0b;
   --panel: #111113;
@@ -9,13 +11,13 @@
   --muted: #9aa4ab;
   --danger: #f87171;
   --green: #34d399;
-  --radius: 14px;
+  --radius: 18px;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); }
-h1, h2, h3 { font-family: 'Sora', 'Inter', sans-serif; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3 { font-family: 'Sora', 'Inter', sans-serif; font-weight: 700; }
 button { font: inherit; cursor: pointer; }
 
 /* ---------- Auth ---------- */
@@ -29,17 +31,17 @@ button { font: inherit; cursor: pointer; }
 .auth-card {
   width: 100%; max-width: 420px;
   background: var(--panel); border: 1px solid var(--line);
-  border-radius: 18px; padding: 36px 32px;
+  border-radius: 20px; padding: 36px 32px;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 20px; margin-bottom: 6px; }
 .brand-dot { width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, var(--teal), var(--cyan)); }
 .auth-sub { color: var(--muted); font-size: 14px; margin-bottom: 26px; }
 .field { margin-bottom: 16px; }
-.field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.field label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
 .field input, .field select {
   width: 100%; padding: 12px 14px;
   background: var(--panel-2); color: var(--text);
-  border: 1px solid var(--line); border-radius: 10px; font: inherit; outline: none;
+  border: 1px solid var(--line); border-radius: 12px; font: inherit; outline: none;
 }
 .field input:focus, .field select:focus { border-color: var(--teal); }
 .optional { color: var(--muted); font-weight: 400; }
@@ -47,7 +49,7 @@ button { font: inherit; cursor: pointer; }
 .btn-primary {
   width: 100%; padding: 12px;
   background: linear-gradient(135deg, var(--teal), var(--cyan));
-  color: #03252a; font-weight: 600; border: none; border-radius: 10px;
+  color: #03252a; font-weight: 600; border: none; border-radius: 12px;
 }
 .btn-primary:disabled { opacity: .6; cursor: wait; }
 .auth-switch { margin-top: 18px; text-align: center; font-size: 14px; color: var(--muted); line-height: 2; }
@@ -65,7 +67,7 @@ button { font: inherit; cursor: pointer; }
 .sidebar .brand { margin-bottom: 28px; padding: 0 8px; }
 .nav-btn {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  padding: 12px; border-radius: 10px; background: none; border: none;
+  padding: 12px; border-radius: 12px; background: none; border: none;
   color: var(--muted); font-size: 14.5px; font-weight: 500;
 }
 .nav-btn:hover { background: var(--panel-2); color: var(--text); }
@@ -73,9 +75,16 @@ button { font: inherit; cursor: pointer; }
 .sidebar-footer { margin-top: auto; padding: 8px; font-size: 12px; color: var(--muted); }
 .sidebar-footer button { background: none; border: none; color: var(--muted); text-decoration: underline; }
 
+.content-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--line);
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-size: 18px; font-weight: 700;
+}
 .main { flex: 1; padding: 40px 48px; display: flex; flex-direction: column; }
 .main-inner { width: 100%; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; }
-.page-title { font-size: 26px; margin-bottom: 6px; }
+.page-title { font-size: 27px; margin-bottom: 6px; font-weight: 800; }
 .page-sub { color: var(--muted); font-size: 14.5px; margin-bottom: 28px; }
 
 /* ---------- Dashboard ---------- */
@@ -85,7 +94,7 @@ button { font: inherit; cursor: pointer; }
   border-radius: var(--radius); padding: 32px; margin-bottom: 34px;
 }
 .eyebrow { font-size: 12px; letter-spacing: .1em; color: var(--cyan); font-weight: 600; margin-bottom: 10px; }
-.welcome-banner h1 { font-size: 30px; margin-bottom: 8px; }
+.welcome-banner h1 { font-size: 30px; margin-bottom: 8px; font-weight: 800; }
 .welcome-banner p { color: var(--muted); font-size: 15px; }
 
 .section-label { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin: 6px 0 14px; }
@@ -100,7 +109,7 @@ button { font: inherit; cursor: pointer; }
 .quick-icon {
   width: 44px; height: 44px; display: grid; place-items: center; font-size: 20px;
   background: linear-gradient(135deg, rgba(20,184,166,.25), rgba(34,211,238,.15));
-  border-radius: 12px; margin-bottom: 14px;
+  border-radius: 14px; margin-bottom: 14px;
 }
 .quick-card h3 { font-size: 17px; margin-bottom: 6px; }
 .quick-card p { color: var(--muted); font-size: 13.5px; margin-bottom: 14px; }
@@ -110,7 +119,7 @@ button { font: inherit; cursor: pointer; }
 .stat-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
 .stat-icon {
   width: 40px; height: 40px; display: grid; place-items: center; font-size: 18px;
-  background: rgba(34,211,238,.12); border-radius: 10px; margin-bottom: 12px; color: var(--cyan);
+  background: rgba(34,211,238,.12); border-radius: 12px; margin-bottom: 12px; color: var(--cyan);
 }
 .stat-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 700; }
@@ -121,7 +130,7 @@ button { font: inherit; cursor: pointer; }
 .gen-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .count-row { display: flex; gap: 8px; }
 .count-chip {
-  padding: 11px 18px; border-radius: 10px;
+  padding: 11px 18px; border-radius: 12px;
   background: var(--panel-2); border: 1px solid var(--line);
   color: var(--muted); font-weight: 500;
 }
@@ -129,7 +138,7 @@ button { font: inherit; cursor: pointer; }
 .generate-btn {
   width: 100%; padding: 13px; margin-top: 6px;
   background: linear-gradient(135deg, var(--teal), var(--cyan));
-  color: #03252a; font-weight: 600; border: none; border-radius: 10px; font-size: 15px;
+  color: #03252a; font-weight: 600; border: none; border-radius: 12px; font-size: 15px;
 }
 .generate-btn:disabled { opacity: .65; cursor: wait; }
 
@@ -150,25 +159,25 @@ button { font: inherit; cursor: pointer; }
 .ideas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .idea-card {
   background: linear-gradient(135deg, rgba(20,184,166,.05), transparent 40%), var(--panel);
-  border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 24px;
   display: flex; flex-direction: column; gap: 12px;
 }
 .idea-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
-.idea-title { font-size: 17px; line-height: 1.35; }
+.idea-title { font-size: 17px; line-height: 1.35; font-weight: 700; }
 .idea-desc { font-size: 14px; color: var(--cyan); line-height: 1.55; }
 .idea-audience { font-size: 13px; color: var(--muted); }
 .idea-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-.tag { font-size: 12px; padding: 4px 11px; border-radius: 999px; border: 1px solid; }
+.tag { font-size: 12px; font-weight: 500; padding: 4px 11px; border-radius: 999px; border: 1px solid; }
 .searches-row { font-size: 13px; color: var(--muted); }
 .score-row {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: 10px; padding: 12px 16px; font-size: 14px; color: var(--muted);
+  border-radius: 12px; padding: 12px 16px; font-size: 14px; color: var(--muted);
 }
 .score-num { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; color: var(--green); }
 .score-num small { font-size: 12px; color: var(--muted); font-weight: 400; }
 .save-btn {
-  flex-shrink: 0; padding: 9px 18px; border-radius: 9px;
+  flex-shrink: 0; padding: 9px 18px; border-radius: 11px;
   background: linear-gradient(135deg, rgba(20,184,166,.2), rgba(34,211,238,.15));
   border: 1px solid rgba(34,211,238,.3); color: var(--cyan); font-weight: 500; font-size: 13.5px;
 }
