@@ -21,6 +21,53 @@ const NAV = [
   { id: 'saved', label: 'Saved PDF Ideas', icon: '♥' },
 ]
 
+// Stable hash so each idea always gets the same badges/queries
+function hashId(id) {
+  const s = String(id)
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+// Color palette for badges (matches PDF Trend Lab look)
+const PALETTE = {
+  green:  { color: '#34d399', border: '1px solid rgba(52,211,153,0.35)',  background: 'rgba(52,211,153,0.10)' },
+  amber:  { color: '#fbbf24', border: '1px solid rgba(251,191,36,0.35)',  background: 'rgba(251,191,36,0.10)' },
+  red:    { color: '#f87171', border: '1px solid rgba(248,113,113,0.35)', background: 'rgba(248,113,113,0.10)' },
+  purple: { color: '#a78bfa', border: '1px solid rgba(167,139,250,0.40)', background: 'rgba(167,139,250,0.12)' },
+  blue:   { color: '#60a5fa', border: '1px solid rgba(96,165,250,0.35)',  background: 'rgba(96,165,250,0.10)' },
+  gray:   { color: '#9ca3af', border: '1px solid rgba(156,163,175,0.30)', background: 'rgba(156,163,175,0.08)' },
+}
+
+function diffBadge(idea) {
+  const d = idea.difficulty
+  if (d === 'Beginner') return { label: 'Easy', tone: 'green' }
+  if (d === 'Intermediate') return { label: 'Medium', tone: 'amber' }
+  return { label: 'Hard', tone: 'red' }
+}
+
+function interestBadge(idea) {
+  return idea.opportunity_score >= 84
+    ? { label: 'High Interest', tone: 'purple' }
+    : { label: 'Med Interest', tone: 'blue' }
+}
+
+function competitionBadge(idea) {
+  const h = hashId(idea.id) % 100
+  const s = idea.opportunity_score
+  if (s >= 88) return h < 68 ? { label: 'Low Competition', tone: 'green' } : { label: 'Med Competition', tone: 'amber' }
+  if (s >= 80) return h < 50 ? { label: 'Med Competition', tone: 'amber' } : { label: 'Low Competition', tone: 'green' }
+  return h < 55 ? { label: 'Med Competition', tone: 'amber' } : { label: 'High Competition', tone: 'red' }
+}
+
+function trendBadge(idea) {
+  const h = Math.floor(hashId(idea.id) / 7) % 100
+  const rising = idea.opportunity_score >= 85 ? h < 72 : h < 42
+  return rising
+    ? { label: '↗ Rising', tone: 'green' }
+    : { label: '— Stable', tone: 'gray' }
+}
+
 function extractTopic(idea) {
   const d = idea.description || ''
   const patterns = [
@@ -39,26 +86,41 @@ function extractTopic(idea) {
   return idea.niche.toLowerCase()
 }
 
-function exampleQueries(idea) {
+function cleanTopic(idea) {
   const t = extractTopic(idea)
-  return [
-    `how to start ${t}`,
-    `${t} for beginners`,
-    `best ${t} tips`,
-    `${t} mistakes to avoid`,
+  return t && t.length < 45 ? t : idea.niche.toLowerCase()
+}
+
+function shortAudience(idea) {
+  const a = (idea.target_audience || '').toLowerCase().replace(/[.,].*$/, '').trim()
+  if (!a) return idea.niche.toLowerCase()
+  const words = a.split(/\s+/)
+  return (words.length <= 5 ? words : words.slice(0, 4)).join(' ')
+}
+
+// Queries oriented toward finding YouTube creators/influencers to partner with
+function exampleQueries(idea) {
+  const niche = idea.niche.toLowerCase()
+  const topic = cleanTopic(idea)
+  const aud = shortAudience(idea)
+  const pool = [
+    `${niche} youtube channels`,
+    `${topic} youtubers`,
+    `${aud} youtube creators`,
+    `small ${niche} channels to partner with`,
+    `${topic} reviewers on youtube`,
+    `${niche} influencers to collaborate`,
+    `${topic} youtube channels`,
   ]
-}
-
-function interestBadge(score) {
-  if (score >= 88) return 'High Interest'
-  if (score >= 80) return 'Rising'
-  return 'Steady'
-}
-
-function difficultyBadge(d) {
-  if (d === 'Beginner') return 'Easy'
-  if (d === 'Intermediate') return 'Medium'
-  return 'Advanced'
+  const seen = new Set()
+  const unique = pool.filter(q => {
+    const k = q.toLowerCase()
+    if (seen.has(k)) return false
+    seen.add(k); return true
+  })
+  const start = hashId(idea.id) % unique.length
+  const rotated = [...unique.slice(start), ...unique.slice(0, start)]
+  return rotated.slice(0, 4)
 }
 
 function fmtDate(ts) {
@@ -78,6 +140,10 @@ function Footer() {
 function IdeaCard({ idea, saved, onToggleSave, removeMode }) {
   const [showQueries, setShowQueries] = useState(false)
   const queries = useMemo(() => exampleQueries(idea), [idea])
+  const badges = useMemo(
+    () => [diffBadge(idea), interestBadge(idea), competitionBadge(idea), trendBadge(idea)],
+    [idea]
+  )
   return (
     <article className="idea-card">
       <div className="idea-top">
@@ -92,16 +158,16 @@ function IdeaCard({ idea, saved, onToggleSave, removeMode }) {
       <p className="idea-desc">{idea.description}</p>
       <p className="idea-audience">👥 {idea.target_audience}</p>
       <div className="idea-meta">
-        <span className="tag tag-easy">{difficultyBadge(idea.difficulty)}</span>
-        <span className="tag tag-interest">{interestBadge(idea.opportunity_score)}</span>
-        <span className="tag tag-niche">{idea.niche}</span>
+        {badges.map((b, i) => (
+          <span key={i} className="tag" style={PALETTE[b.tone]}>{b.label}</span>
+        ))}
       </div>
       <div className="score-row">
         <span>🏆 Opportunity Score</span>
         <span className="score-num">{idea.opportunity_score}<small>/100</small></span>
       </div>
       <button className="queries-toggle" onClick={() => setShowQueries(v => !v)}>
-        🔍 {showQueries ? 'Hide' : 'Show'} Example Queries (4)
+        🔍 {showQueries ? 'Hide' : 'Show'} Example Queries ({queries.length})
       </button>
       {showQueries && (
         <div className="queries-list">
@@ -394,10 +460,12 @@ export default function App() {
         <div className="sidebar-footer">{session.user.email}<br /><button onClick={() => supabase.auth.signOut()}>Log out</button></div>
       </aside>
       <main className="main">
-        {page === 'dashboard' && <Dashboard userEmail={session.user.email} savedCount={savedIdeas.length} lastGen={lastGen} onGoGenerate={() => setPage('generate')} onGoSaved={() => setPage('saved')} />}
-        {page === 'generate' && <Generate savedIds={savedIds} onToggleSave={toggleSave} onGenerated={setLastGen} />}
-        {page === 'saved' && <Saved savedIdeas={savedIdeas} onToggleSave={toggleSave} />}
-        <Footer />
+        <div className="main-inner" style={{ maxWidth: 1180, margin: '0 auto', width: '100%' }}>
+          {page === 'dashboard' && <Dashboard userEmail={session.user.email} savedCount={savedIdeas.length} lastGen={lastGen} onGoGenerate={() => setPage('generate')} onGoSaved={() => setPage('saved')} />}
+          {page === 'generate' && <Generate savedIds={savedIds} onToggleSave={toggleSave} onGenerated={setLastGen} />}
+          {page === 'saved' && <Saved savedIdeas={savedIdeas} onToggleSave={toggleSave} />}
+          <Footer />
+        </div>
       </main>
     </div>
   )
