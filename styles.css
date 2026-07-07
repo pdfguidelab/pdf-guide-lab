@@ -1,12 +1,12 @@
 :root {
-  --bg: #07090d;
-  --panel: #0d1218;
-  --panel-2: #131a22;
-  --line: #1c2733;
+  --bg: #0a0a0b;
+  --panel: #111113;
+  --panel-2: #17171a;
+  --line: #232328;
   --teal: #14b8a6;
   --cyan: #22d3ee;
-  --text: #e9f4f4;
-  --muted: #8aa3ab;
+  --text: #eef2f3;
+  --muted: #9aa4ab;
   --danger: #f87171;
   --green: #34d399;
   --radius: 14px;
@@ -22,8 +22,8 @@ button { font: inherit; cursor: pointer; }
 .auth-wrap {
   min-height: 100vh; display: grid; place-items: center; padding: 24px;
   background:
-    radial-gradient(700px 500px at 80% 10%, rgba(34,211,238,.07), transparent),
-    radial-gradient(700px 500px at 10% 90%, rgba(20,184,166,.07), transparent),
+    radial-gradient(700px 500px at 80% 10%, rgba(34,211,238,.06), transparent),
+    radial-gradient(700px 500px at 10% 90%, rgba(20,184,166,.06), transparent),
     var(--bg);
 }
 .auth-card {
@@ -73,13 +73,14 @@ button { font: inherit; cursor: pointer; }
 .sidebar-footer { margin-top: auto; padding: 8px; font-size: 12px; color: var(--muted); }
 .sidebar-footer button { background: none; border: none; color: var(--muted); text-decoration: underline; }
 
-.main { flex: 1; padding: 40px 48px; max-width: 1150px; display: flex; flex-direction: column; }
+.main { flex: 1; padding: 40px 48px; display: flex; flex-direction: column; }
+.main-inner { width: 100%; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; }
 .page-title { font-size: 26px; margin-bottom: 6px; }
 .page-sub { color: var(--muted); font-size: 14.5px; margin-bottom: 28px; }
 
 /* ---------- Dashboard ---------- */
 .welcome-banner {
-  background: linear-gradient(120deg, rgba(20,184,166,.18), rgba(34,211,238,.08) 60%, transparent);
+  background: linear-gradient(120deg, rgba(20,184,166,.16), rgba(34,211,238,.07) 60%, transparent);
   border: 1px solid rgba(34,211,238,.25);
   border-radius: var(--radius); padding: 32px; margin-bottom: 34px;
 }
@@ -146,9 +147,9 @@ button { font: inherit; cursor: pointer; }
 .loading-card p { color: var(--muted); font-size: 13.5px; }
 
 /* ---------- Idea cards ---------- */
-.ideas-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.ideas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .idea-card {
-  background: linear-gradient(135deg, rgba(20,184,166,.06), transparent 40%), var(--panel);
+  background: linear-gradient(135deg, rgba(20,184,166,.05), transparent 40%), var(--panel);
   border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
   display: flex; flex-direction: column; gap: 12px;
 }
@@ -158,9 +159,7 @@ button { font: inherit; cursor: pointer; }
 .idea-audience { font-size: 13px; color: var(--muted); }
 .idea-meta { display: flex; gap: 8px; flex-wrap: wrap; }
 .tag { font-size: 12px; padding: 4px 11px; border-radius: 999px; border: 1px solid; }
-.tag-easy { color: var(--green); border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.08); }
-.tag-interest { color: var(--cyan); border-color: rgba(34,211,238,.35); background: rgba(34,211,238,.08); }
-.tag-niche { color: var(--muted); border-color: var(--line); background: var(--panel-2); }
+.searches-row { font-size: 13px; color: var(--muted); }
 .score-row {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--panel-2); border: 1px solid var(--line);
@@ -194,6 +193,10 @@ button { font: inherit; cursor: pointer; }
   font-size: 13.5px; color: var(--muted);
 }
 .site-footer a { color: var(--cyan); text-decoration: none; }
+
+@media (max-width: 900px) {
+  .ideas-grid { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 720px) {
   .shell { flex-direction: column; }
