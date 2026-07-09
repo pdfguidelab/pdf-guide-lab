@@ -300,7 +300,6 @@ function Dashboard({ userEmail, savedCount, lastGen, onGoGenerate, onGoSaved }) 
 }
 
 function Generate({ savedIds, onToggleSave, onGenerated }) {
-  const [topic, setTopic] = useState('')
   const [niche, setNiche] = useState('')
   const [count, setCount] = useState(10)
   const [ideas, setIdeas] = useState([])
@@ -310,23 +309,11 @@ function Generate({ savedIds, onToggleSave, onGenerated }) {
   async function generate() {
     setBusy(true); setError(''); setIdeas([])
     const delay = new Promise(r => setTimeout(r, 9000 + Math.random() * 5000))
-    let result
-    if (topic.trim()) {
-      let q = supabase.from('ideas').select('*').or(`title.ilike.%${topic.trim()}%,description.ilike.%${topic.trim()}%`).limit(60)
-      if (niche) q = q.eq('niche', niche)
-      result = await q
-      if (result.data) {
-        const shuffled = [...result.data].sort(() => Math.random() - 0.5)
-        result = { ...result, data: shuffled.slice(0, count) }
-      }
-    } else {
-      result = await supabase.rpc('get_random_ideas', { p_niche: niche || null, p_count: count })
-    }
+    const result = await supabase.rpc('get_random_ideas', { p_niche: niche || null, p_count: count })
     await delay
     if (result.error) setError('Could not load ideas. Refresh and try again.')
     else {
       setIdeas(result.data || [])
-      if ((result.data || []).length === 0) setError('No ideas matched that topic. Try a broader keyword or leave it empty.')
       const ts = Date.now()
       localStorage.setItem('pgl_last_gen', String(ts))
       onGenerated(ts)
@@ -340,10 +327,6 @@ function Generate({ savedIds, onToggleSave, onGenerated }) {
       <p className="page-sub">Find trending PDF guide ideas for your niche.</p>
 
       <div className="gen-panel">
-        <div className="field">
-          <label>Topic or Problem <span className="optional">(Optional)</span></label>
-          <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g., healthy meal planning for busy parents…" />
-        </div>
         <div className="gen-row">
           <div className="field">
             <label>Niche <span className="required">*</span></label>
